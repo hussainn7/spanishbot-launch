@@ -10,8 +10,7 @@ from telebot import types
 import logging
 from g4f.client import Client
 import g4f
-from configTEST import TOKEN, PRICE, information_about_company
-from paymentTEST import check, create
+from config import TOKEN, PRICE, information_about_company
 import os
 import sqlite3
 from gtts import gTTS
