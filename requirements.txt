@@ -1,0 +1,11 @@
+asyncio
+requests
+pyTelegramBotAPI
+APScheduler
+Flask
+g4f
+gTTS
+pytube
+SpeechRecognition
+googletrans==4.0.0-rc1  # Note that googletrans might need this specific version
+schedule
