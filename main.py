@@ -209,7 +209,7 @@ async def generate_response(text):
     response = await g4f.ChatCompletion.create_async(
         model=g4f.models.default,
         messages=[{"role": "user", "content": text}],
-        provider=g4f.Provider.HuggingFace
+        provider=g4f.Provider.FreeGpt
     )
     print("Response generated.")
     return response
