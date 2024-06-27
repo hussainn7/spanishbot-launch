@@ -10,7 +10,8 @@ from telebot import types
 import logging
 from g4f.client import Client
 import g4f
-from config import TOKEN, PRICE, information_about_company
+from configTEST import TOKEN, PRICE, information_about_company
+from paymentTEST import check, create
 import os
 import sqlite3
 from gtts import gTTS
@@ -36,7 +37,7 @@ g4f_client = Client()
 
 INTRODUCTION_MESSAGE = ("¡Hola! Я — Tiabaldo, твой виртуальный преподаватель испанского языка. Soy Tiabaldo, tu profesor virtual de español.")
 
-FREE_PERIOD = 3 * 60  # 10 seconds for testing
+FREE_PERIOD = 1 * 2  # 10 seconds for testing
 
 ADMIN_USER_ID = 1262676599
 
@@ -760,7 +761,7 @@ def handle_profile_button(message):
     user_id = message.from_user.id
     markup_profile = types.ReplyKeyboardMarkup(row_width=1, one_time_keyboard=True)
     markup_profile.add(types.KeyboardButton('⛳Activar GPT-4o'), types.KeyboardButton('📝 Audio a texto'),types.KeyboardButton("🌎 Idioma"),
-                       types.KeyboardButton('🔄 Reinicie'), types.KeyboardButton("💎Premium"),
+                       types.KeyboardButton('🔄 Reinicie'), types.KeyboardButton("💎Premium.."),
                        types.KeyboardButton('🔙 Volver al menú principal'))
     if is_premium_user(user_id):
         bot.reply_to(message, "Su situación: Premium", reply_markup=markup_profile)
@@ -778,13 +779,18 @@ def handle_transcribe_button(message):
     bot.reply_to(message, 'El reinicio se ha realizado correctamente ♻️', reply_markup=markup)
 
 
-@bot.message_handler(func=lambda message: message.text == '💎Premium')
+@bot.message_handler(func=lambda message: message.text == '💎Premium..')
 def handle_transcribe_button(message):
     user_id = message.from_user.id
+    markup_buy = types.InlineKeyboardMarkup()
+    yoomoney_button = types.InlineKeyboardButton(text="Robokassa", callback_data='pay_robokassa')
+    crypto_button = types.InlineKeyboardButton(text="Crypto", callback_data='pay_crypto')
+    markup_buy.add(yoomoney_button, crypto_button)
+
     if is_premium_user(user_id):
         bot.reply_to(message, "Ya tiene premium, ¡enhorabuena!")
     else:
-        msg = bot.reply_to(message, "Premium es muy útil: \n ✅ Transcricpión de los videos de youtube (Premium)\n ✅ Activar GPT-4o (Premium)\n ✅ Más conversación (Premium)\n" )
+        msg = bot.reply_to(message, "Premium es muy útil: \n ✅ Transcricpión de los videos de youtube (Premium)\n ✅ Activar GPT-4o (Premium)\n ✅ Más conversación (Premium)\n", reply_markup = markup_buy )
         bot.reply_to(message, msg)
 
 
@@ -928,12 +934,6 @@ def handle_transcribe_button(message):
     crypto_button = types.InlineKeyboardButton(text="Crypto", callback_data='pay_crypto')
     markup_buy.add(yoomoney_button, crypto_button)
 
-    # Send a message prompting the user to choose a payment method
-    bot.send_message(
-        message.chat.id,  # Correct attribute is 'chat.id' instead of 'chat_id'
-        "Вы пользуетесь нашим сервисом в течение 1 минуты. Чтобы продолжить пользоваться сервисом, вам необходимо произвести оплату. Пожалуйста, выберите способ оплаты:",
-        reply_markup=markup_buy
-    )
 
     # Create reply keyboard markup for main options
     markup = types.ReplyKeyboardMarkup(row_width=1)
@@ -1027,7 +1027,6 @@ def buy_handler(message):
     bot.send_message(chat_id,
                      "Вы пользуетесь нашим сервисом в течение 10 минут. Чтобы продолжить пользоваться сервисом, вам необходимо произвести оплату. Пожалуйста, выберите способ оплаты:",
                      reply_markup=markup)
-
 
 @bot.callback_query_handler(func=lambda call: call.data.startswith('pay_robokassa') or call.data.startswith('check_'))
 def handle_payment_option(call):
@@ -1249,13 +1248,53 @@ def is_within_free_period(user_id):
     return True
 
 
+@bot.message_handler(commands=['give_prem'])
+def give_premium_access(message):
+    # Проверяем, что команду отправил администратор
+    if message.from_user.id != ADMIN_USER_ID:
+        bot.reply_to(message, "Вы не авторизованы для использования этой команды.")
+        return
+
+    # Извлекаем имя пользователя или ID из команды
+    command_parts = message.text.split()
+    if len(command_parts) < 2:
+        bot.reply_to(message, "Пожалуйста, укажите имя пользователя или ID.")
+        return
+
+    user_identifier = command_parts[1]
+
+    # Разрешаем ID пользователя по имени пользователя, если указано
+    if not user_identifier.isdigit():
+        try:
+            user_info = bot.get_chat(user_identifier)
+            user_id = user_info.id
+        except telebot.apihelper.ApiException as e:
+            bot.reply_to(message, f"Пользователь '{user_identifier}' не найден.")
+            return
+    else:
+        user_id = int(user_identifier)
+
+    # Предоставляем пользователю доступ к премиум-функциям
+    mark_as_premium(user_id)
+
+    # Уведомляем пользователя о предоставлении премиум-доступа
+    bot.send_message(user_id, "Поздравляем! Вам предоставлен доступ к премиум-функциям.")
+
+    # Уведомляем администратора о выполненном действии
+    bot.send_message(ADMIN_USER_ID,
+                     f"Пользователю {escape_markdown_v2(user_identifier)} предоставлен доступ к премиум-функциям.")
+
+    # Подтверждаем администратору, что действие было успешным
+    bot.reply_to(message, f"Премиум-доступ предоставлен пользователю {escape_markdown_v2(user_identifier)}.")
+
+
 @bot.message_handler(func=lambda message: True)
 def handle_message(message):
     user_id = message.from_user.id
 
     # Check if user is within free period or is a premium user
     if not is_within_free_period(user_id) and not is_premium_user(user_id):
-        buy_handler(message.chat.id)  # Pass chat.id directly
+        buy_handler(message)  # Pass the entire message object
         return
 
     if translation_enabled:
