@@ -10,7 +10,8 @@ from telebot import types
 import logging
 from g4f.client import Client
 import g4f
-from config import TOKEN, PRICE, information_about_company
+from configTEST import TOKEN, PRICE, information_about_company
+from paymentTEST import check, create
 import os
 import sqlite3
 from gtts import gTTS
@@ -36,7 +37,7 @@ g4f_client = Client()
 
 INTRODUCTION_MESSAGE = ("¡Hola! Я — Tiabaldo, твой виртуальный преподаватель испанского языка. Soy Tiabaldo, tu profesor virtual de español.")
 
-FREE_PERIOD = 3 * 60  # 10 seconds for testing
+FREE_PERIOD = 1 * 2  # 10 seconds for testing
 
 ADMIN_USER_ID = 1262676599
 
@@ -270,7 +271,7 @@ def select_language(message):
         # Set user language to Spanish
         markup = types.ReplyKeyboardMarkup(row_width=1)
         markup.add(types.KeyboardButton("🚀 Inicio"),types.KeyboardButton("🅰 Transcripción"),
-                   types.KeyboardButton('👥 Perfil'),
+                   types.KeyboardButton('👥 Perfil'),types.KeyboardButton("📟Traducción"),
                    types.KeyboardButton("❓ ¿Qué es eso?"))
         welcome_message = "¡Hola! Soy Tiabaldo, tu profesor virtual de español\n" \
 "⠀⠀⠀\n" \
@@ -369,7 +370,6 @@ def toggle_transcription(message):
     global translation_enabled
 
     translation_enabled = not translation_enabled
-
     if translation_enabled:
         bot.reply_to(message, "La transcripción está activada. Los mensajes de voz se transcribirán.")
     else:
@@ -387,6 +387,15 @@ def toggle_transcription(message):
         bot.reply_to(message, "Транскрибация выключена.")
 
 # Handler for the "Translation" button
+@bot.message_handler(func=lambda message: message.text == "📟Traducción")
+def toggle_translation(message):
+    global translation_enabled
+    translation_enabled = not translation_enabled
+    if translation_enabled:
+        bot.send_message(message.chat.id, "Traducción incluida. Todos los mensajes en español serán traducidos al ruso.")
+    else:
+        bot.send_message(message.chat.id, "La traducción está deshabilitada.")
+
 @bot.message_handler(func=lambda message: message.text == "📟Перевод")
 def toggle_translation(message):
     global translation_enabled
@@ -797,7 +806,7 @@ def handle_transcribe_button(message):
 def handle_transcribe_button(message):
     markup = types.ReplyKeyboardMarkup(row_width=1)
     markup.add(types.KeyboardButton("🚀 Inicio"), types.KeyboardButton("🅰 Transcripción"),
-               types.KeyboardButton('👥 Perfil'),
+               types.KeyboardButton('👥 Perfil'),types.KeyboardButton("📟Traducción"),
                types.KeyboardButton("❓ ¿Qué es eso?"))
     user_id = message.from_user.id
     if not is_premium_user(user_id):
@@ -1063,6 +1072,7 @@ def handle_payment_option(call):
             send_success_message(order_id, "Payment for Service")
         else:
             bot.send_message(chat_id, f'Payment status for order {order_id}: {payment_status}')
+            print(f"У тебя человек на оплате с айдишником {order_id}")
 
 
 # Flask route for handling Robokassa ResultURL
@@ -1170,30 +1180,43 @@ def fail():
     # Handle failure (e.g., show a failure message)
     return f'Payment failed for order {order_id}'
 
-# Telegram bot command to start payment process
-@bot.message_handler(commands=['start'])
-def handle_start(message):
-    markup = telebot.types.InlineKeyboardMarkup()
-    pay_button = telebot.types.InlineKeyboardButton(text="PAY", callback_data="pay")
-    check_payment_button = telebot.types.InlineKeyboardButton(text="Check Payment", callback_data="check_payment")
-    markup.add(pay_button, check_payment_button)
-    bot.send_message(message.chat.id, "Choose an action:", reply_markup=markup)
+
+@bot.message_handler(commands=['zaplat'])
+def zaplat_handler(message):
+    order_id = message.chat.id
+    product_description = "Payment for Service"
+    payment_link = generate_payment_link(950.0, order_id, product_description)
+    bot.send_message(message.chat.id, f'Click the link to pay: {payment_link}')
+
+    conn = sqlite3.connect('user_data.db')
+    try:
+        c = conn.cursor()
+        c.execute('INSERT OR REPLACE INTO pending_payments (user_id, product_description) VALUES (?, ?)',
+                  (order_id, product_description))
+        c.execute('INSERT OR REPLACE INTO orders (order_id, status) VALUES (?, ?)', (order_id, "pending"))
+        conn.commit()
+    finally:
+        conn.close()
+
 
 @bot.callback_query_handler(func=lambda call: True)
 def handle_query(call):
     if call.data == "pay":
         order_id = call.message.chat.id
-        product_description = "Payment for Service"  # Example product description
+        product_description = "Payment for Service"
         payment_link = generate_payment_link(950.0, order_id, product_description)
         bot.send_message(call.message.chat.id, f'Click the link to pay: {payment_link}')
+
         conn = sqlite3.connect('user_data.db')
         try:
             c = conn.cursor()
-            c.execute('INSERT OR REPLACE INTO pending_payments (user_id, product_description) VALUES (?, ?)', (order_id, product_description))
+            c.execute('INSERT OR REPLACE INTO pending_payments (user_id, product_description) VALUES (?, ?)',
+                      (order_id, product_description))
             c.execute('INSERT OR REPLACE INTO orders (order_id, status) VALUES (?, ?)', (order_id, "pending"))
             conn.commit()
         finally:
             conn.close()
+
     elif call.data == "check_payment":
         order_id = call.message.chat.id
         payment_status = check_payment_status(order_id)
@@ -1204,6 +1227,7 @@ def handle_query(call):
             send_success_message(order_id, "Payment for Service")
         else:
             bot.send_message(call.message.chat.id, f'Payment status for order {order_id}: {payment_status}')
+            print(f"User with ID {order_id} has a pending payment.")
 
 
 
@@ -1245,6 +1269,41 @@ def is_within_free_period(user_id):
         mark_free_period_used(user_id)
         return False
     return True
+
+@bot.message_handler(commands=['add_user'])
+def add_user_handler(message):
+    # Check if the command sender is the administrator
+    if message.from_user.id != ADMIN_USER_ID:
+        bot.reply_to(message, "You are not authorized to use this command.")
+        return
+
+    # Extract the user ID from the command
+    command_parts = message.text.split()
+    if len(command_parts) < 2:
+        bot.reply_to(message, "Please specify the user ID.")
+        return
+
+    user_identifier = command_parts[1]
+
+    # Resolve the user ID if a username is given
+    if not user_identifier.isdigit():
+        try:
+            user_info = bot.get_chat(user_identifier)
+            user_id = user_info.id
+        except telebot.apihelper.ApiException as e:
+            bot.reply_to(message, f"User '{user_identifier}' not found.")
+            return
+    else:
+        user_id = int(user_identifier)
+
+    # Add the user to the used_free_period table
+    mark_free_period_used(user_id)
+
+    # Notify the user about the addition
+    bot.send_message(user_id, "Бот работает вновь")
+
+    # Notify the administrator about the successful action
+    bot.reply_to(message, f"User {user_identifier} has been added to the used free period users.")
 
 
 @bot.message_handler(commands=['give_prem'])
