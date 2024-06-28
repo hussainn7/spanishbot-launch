@@ -36,7 +36,7 @@ g4f_client = Client()
 
 INTRODUCTION_MESSAGE = ("¡Hola! Я — Tiabaldo, твой виртуальный преподаватель испанского языка. Soy Tiabaldo, tu profesor virtual de español.")
 
-FREE_PERIOD = 1 * 2  # 10 seconds for testing
+FREE_PERIOD = 3 * 60  # 10 seconds for testing
 
 ADMIN_USER_ID = 1262676599
 
