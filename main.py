@@ -769,9 +769,43 @@ def handle_profile_button(message):
                        types.KeyboardButton('🔄 Reinicie'), types.KeyboardButton("💎Premium"),
                        types.KeyboardButton('🔙 Volver al menú principal'))
     if is_premium_user(user_id):
-        bot.reply_to(message, "Su situación: Premium", reply_markup=markup_profile)
+        bot.send_message(user_id, """
+    ¡Hola, amigo! 🇪🇸
+
+    🧑‍💻 <b>Tu tarifa:</b> premium
+    ⏳ <b>Tu saldo:</b> quedan  3 min / 10,000 tokens  GPT-3.5 
+    🛠 <b>Tu modo:</b> GPT-3.5
+    🔔 <b>Notificaciones:</b> activadas
+    🌐 <b>Idioma:</b> idioma del sistema
+
+    🆓 <b>Tarifa gratuita</b> incluye 3 minutos de conversación oral al día, o 10000 tokens.
+
+    💎 <b>Tarifa Premium</b> incluye: 
+    ✅ 15 minutos de conversación oral cada día  
+    ✅ 30000 tokens GPT-3.5 cada día  
+    ✅ 800 tokens GPT-4o y la posibilidad de trabajar con (documentos, imágenes, sitios web), transcripción.
+
+Al cambiar a la versión premium, se te cobrará una tarifa mensual de 499 rublos, o 7 USDT, hasta que desactives esta opción. No se prevé reembolso. Puedes pagar con un código QR o tarjeta.
+    """, parse_mode="HTML", reply_markup=markup_profile)
     else:
-        bot.reply_to(message, "Su situación: Free", reply_markup=markup_profile)
+        bot.send_message(user_id, """
+    ¡Hola, amigo! 🇪🇸
+
+    🧑‍💻 <b>Tu tarifa:</b> бесплатный
+    ⏳ <b>Tu saldo:</b> quedan  3 min  / 10,000 tokens  GPT-3.5 
+    🛠 <b>Tu modo:</b> GPT-3.5
+    🔔 <b>Notificaciones:</b> activadas
+    🌐 <b>Idioma:</b> idioma del sistema
+
+    🆓 <b>Tarifa gratuita</b> incluye 3 minutos de conversación oral al día, o 10000 tokens.
+
+    💎 <b>Tarifa Premium</b> incluye: 
+    ✅ 15 minutos de conversación oral cada día  
+    ✅ 30000 tokens GPT-3.5 cada día  
+    ✅ 800 tokens GPT-4o y la posibilidad de trabajar con (documentos, imágenes, sitios web), transcripción.
+
+    Al cambiar a la versión premium, se te cobrará una tarifa mensual de 499 rublos, o 7 USDT, hasta que desactives esta opción. No se prevé reembolso. Puedes pagar con un código QR o tarjeta.
+    """, parse_mode="HTML", reply_markup=markup_profile)
 
 
 @bot.message_handler(func=lambda message: message.text == '🔄 Reinicie')
