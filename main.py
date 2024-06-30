@@ -791,7 +791,7 @@ Al cambiar a la versión premium, se te cobrará una tarifa mensual de 499 rublo
         bot.send_message(user_id, """
     ¡Hola, amigo! 🇪🇸
 
-    🧑‍💻 <b>Tu tarifa:</b> бесплатный
+    🧑‍💻 <b>Tu tarifa:</b> gratuita
     ⏳ <b>Tu saldo:</b> quedan  3 min  / 10,000 tokens  GPT-3.5 
     🛠 <b>Tu modo:</b> GPT-3.5
     🔔 <b>Notificaciones:</b> activadas
