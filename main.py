@@ -10,7 +10,8 @@ from telebot import types
 import logging
 from g4f.client import Client
 import g4f
-from config import TOKEN, PRICE, information_about_company
+from config import TOKEN, information_about_company, ADMIN_USER_ID, price
+# from paymentTEST import check, create
 import os
 import sqlite3
 from gtts import gTTS
@@ -37,8 +38,6 @@ g4f_client = Client()
 INTRODUCTION_MESSAGE = ("¡Hola! Я — Tiabaldo, твой виртуальный преподаватель испанского языка. Soy Tiabaldo, tu profesor virtual de español.")
 
 FREE_PERIOD = 1 * 2  # 10 seconds for testing
-
-ADMIN_USER_ID = 1262676599
 
 bot = telebot.TeleBot(TOKEN)
 
@@ -256,7 +255,6 @@ def start(message):
     user_id = message.from_user.id
     markup = types.ReplyKeyboardMarkup(row_width=1)
 
-    # Adding language selection options
     markup.add(types.KeyboardButton("🇪🇸 Español"), types.KeyboardButton("🇷🇺 Русский"))
 
     bot.reply_to(message, "Hola! 🌟 Elige tu idioma preferido / Выберите ваш язык", reply_markup=markup)
@@ -818,7 +816,7 @@ def handle_transcribe_button(message):
 def back_menu(message):
     markup = types.ReplyKeyboardMarkup(row_width=1)
     markup.add(types.KeyboardButton("🚀 Inicio"), types.KeyboardButton('📝 Audio a texto'),
-               types.KeyboardButton('👥 Perfil'),
+               types.KeyboardButton('👥 Perfil'),types.KeyboardButton("📟Traducción"),
                types.KeyboardButton("❓ ¿Qué es eso?"))
     bot.reply_to(message, "Hola, soy tu profesor de español. Pregúntame lo que quieras.", reply_markup=markup)
 
@@ -915,7 +913,7 @@ def yazik_func(message):
 @bot.message_handler(func=lambda message: message.text == '🔄 Перезапуск')
 def handle_transcribe_button(message):
     markup = types.ReplyKeyboardMarkup(row_width=1)
-    markup.add(types.KeyboardButton("🚀 Начать"), types.KeyboardButton('📝 Аудио в текст'),
+    markup.add(types.KeyboardButton("🚀 Начать"), types.KeyboardButton("🅰 Транскрибация"),
                types.KeyboardButton('👥 Профиль'), types.KeyboardButton("📟Перевод"),
                types.KeyboardButton("❓ Что это?"))
     time.sleep(3)
@@ -925,7 +923,7 @@ def handle_transcribe_button(message):
 @bot.message_handler(func=lambda message: message.text == '🔙 Назад в главное меню')
 def back_menu(message):
     markup = types.ReplyKeyboardMarkup(row_width=1)
-    markup.add(types.KeyboardButton("🚀 Начать"), types.KeyboardButton('📝 Аудио в текст'),
+    markup.add(types.KeyboardButton("🚀 Начать"), types.KeyboardButton("🅰 Транскрибация"),
                types.KeyboardButton('👥 Профиль'), types.KeyboardButton("📟Перевод"),
                types.KeyboardButton("❓ Что это?"))
     bot.reply_to(message, "Привет! Я твой учитель испанского языка. Спросите меня о чем угодно", reply_markup=markup)
@@ -946,7 +944,7 @@ def handle_transcribe_button(message):
     markup = types.ReplyKeyboardMarkup(row_width=1)
     markup.add(
         types.KeyboardButton("🚀 Начать"),
-        types.KeyboardButton('📝 Аудио в текст'),
+        types.KeyboardButton("🅰 Транскрибация"),
         types.KeyboardButton('👥 Профиль'),
         types.KeyboardButton("📟Перевод"),
         types.KeyboardButton("❓ Что это?")
@@ -963,7 +961,7 @@ def handle_transcribe_button(message):
 def handle_transcribe_button(message):
     user_id = message.from_user.id
     markup = types.ReplyKeyboardMarkup(row_width=1)
-    markup.add(types.KeyboardButton("🚀 Начать"), types.KeyboardButton('📝 Аудио в текст'),
+    markup.add(types.KeyboardButton("🚀 Начать"), types.KeyboardButton("🅰 Транскрибация"),
                types.KeyboardButton('👥 Профиль'), types.KeyboardButton("📟Перевод"),
                types.KeyboardButton("❓ Что это?"))
     if not is_premium_user(user_id):
@@ -1041,7 +1039,7 @@ def handle_payment_option(call):
     if call.data == 'pay_robokassa':
         order_id = str(chat_id)  # Using chat ID as order ID
         product_description = "Payment for Service"  # Example product description
-        payment_url = generate_payment_link(950.0, order_id, product_description)
+        payment_url = generate_payment_link(price, order_id, product_description)
 
         # Create inline keyboard with Pay and Check Payment options
         markup = types.InlineKeyboardMarkup()
@@ -1184,7 +1182,7 @@ def fail():
 def zaplat_handler(message):
     order_id = message.chat.id
     product_description = "Payment for Service"
-    payment_link = generate_payment_link(950.0, order_id, product_description)
+    payment_link = generate_payment_link(price, order_id, product_description)
     bot.send_message(message.chat.id, f'Click the link to pay: {payment_link}')
 
     conn = sqlite3.connect('user_data.db')
@@ -1203,7 +1201,7 @@ def handle_query(call):
     if call.data == "pay":
         order_id = call.message.chat.id
         product_description = "Payment for Service"
-        payment_link = generate_payment_link(950.0, order_id, product_description)
+        payment_link = generate_payment_link(price, order_id, product_description)
         bot.send_message(call.message.chat.id, f'Click the link to pay: {payment_link}')
 
         conn = sqlite3.connect('user_data.db')
@@ -1230,7 +1228,13 @@ def handle_query(call):
 
 
 
-
+@bot.message_handler(commands=['help_admin'])
+def handle_saf(message):
+    user_id = message.from_user.id
+    if user_id == ADMIN_USER_ID:
+        bot.reply_to(message, "Привет! Тут полезное для админов \nКоманды\n/give_prem айди пользователя - команда позволяет дать премиум подписку пользователю \n/add_user айди пользователя - закидывает человека в базу данных \n/announce - команда позволяет отправить оповещение всем пользователям сервиса")
+    else:
+        bot.reply_to(message, "type /start")
 
 # /saf command handler (clear used free periods)
 @bot.message_handler(commands=['saf'])
