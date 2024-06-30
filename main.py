@@ -766,7 +766,7 @@ def handle_profile_button(message):
     user_id = message.from_user.id
     markup_profile = types.ReplyKeyboardMarkup(row_width=1, one_time_keyboard=True)
     markup_profile.add(types.KeyboardButton('⛳Activar GPT-4o'), types.KeyboardButton('📝 Audio a texto'),types.KeyboardButton("🌎 Idioma"),
-                       types.KeyboardButton('🔄 Reinicie'), types.KeyboardButton("💎Premium.."),
+                       types.KeyboardButton('🔄 Reinicie'), types.KeyboardButton("💎Premium"),
                        types.KeyboardButton('🔙 Volver al menú principal'))
     if is_premium_user(user_id):
         bot.reply_to(message, "Su situación: Premium", reply_markup=markup_profile)
@@ -784,19 +784,30 @@ def handle_transcribe_button(message):
     bot.reply_to(message, 'El reinicio se ha realizado correctamente ♻️', reply_markup=markup)
 
 
-@bot.message_handler(func=lambda message: message.text == '💎Premium..')
+@bot.message_handler(func=lambda message: message.text == '💎Premium')
 def handle_transcribe_button(message):
     user_id = message.from_user.id
+
+    # Create inline keyboard markup for payment options
     markup_buy = types.InlineKeyboardMarkup()
     yoomoney_button = types.InlineKeyboardButton(text="Robokassa", callback_data='pay_robokassa')
     crypto_button = types.InlineKeyboardButton(text="Crypto", callback_data='pay_crypto')
     markup_buy.add(yoomoney_button, crypto_button)
 
+    # Define the messages to send
+    messages = [
+        "Premium es muy útil:",
+        "✅ Transcripción de los videos de youtube (Premium)",
+        "✅ Activar GPT-4o (Premium)",
+        "✅ Más conversación (Premium)"
+    ]
+
+    # Check if the user is a premium user and respond accordingly
     if is_premium_user(user_id):
         bot.reply_to(message, "Ya tiene premium, ¡enhorabuena!")
     else:
-        msg = bot.reply_to(message, "Premium es muy útil: \n ✅ Transcricpión de los videos de youtube (Premium)\n ✅ Activar GPT-4o (Premium)\n ✅ Más conversación (Premium)\n", reply_markup = markup_buy )
-        bot.reply_to(message, msg)
+        for msg in messages:
+            bot.reply_to(message, msg, reply_markup=markup_buy if msg == messages[0] else None)
 
 
 @bot.message_handler(func=lambda message: message.text == '⛳Activar GPT-4o')
@@ -832,7 +843,7 @@ def handle_profile_button(message):
     markup_profile = types.ReplyKeyboardMarkup(row_width=1, one_time_keyboard=True)
     markup_profile.add(types.KeyboardButton('⛳Включить GPT-4o'), types.KeyboardButton('📝 Аудио в текст'),
                        types.KeyboardButton("🌎 Язык"), types.KeyboardButton('🔔 Оповещения'),
-                       types.KeyboardButton('🔄 Перезапуск'), types.KeyboardButton("💎Premium."),
+                       types.KeyboardButton('🔄 Перезапуск'), types.KeyboardButton("💎Premim"),
                        types.KeyboardButton('🔙 Назад в главное меню'))
     if is_premium_user(user_id):
         bot.send_message(user_id, """
@@ -929,7 +940,7 @@ def back_menu(message):
     bot.reply_to(message, "Привет! Я твой учитель испанского языка. Спросите меня о чем угодно", reply_markup=markup)
 
 
-@bot.message_handler(func=lambda message: message.text == '💎Premium.')
+@bot.message_handler(func=lambda message: message.text == '💎Premim')
 def handle_transcribe_button(message):
     user_id = message.from_user.id
 
@@ -938,7 +949,6 @@ def handle_transcribe_button(message):
     yoomoney_button = types.InlineKeyboardButton(text="Robokassa", callback_data='pay_robokassa')
     crypto_button = types.InlineKeyboardButton(text="Crypto", callback_data='pay_crypto')
     markup_buy.add(yoomoney_button, crypto_button)
-
 
     # Create reply keyboard markup for main options
     markup = types.ReplyKeyboardMarkup(row_width=1)
@@ -950,11 +960,20 @@ def handle_transcribe_button(message):
         types.KeyboardButton("❓ Что это?")
     )
 
+    # Define the messages to send
+    messages = [
+        "Премиум даёт полезные функции:",
+        "✅ Транскрипция аудио и роликов youtube (Premium)",
+        "✅ Включить GPT-4o (Premium)",
+        "✅ Больше минут разговора в (Premium)"
+    ]
+
     # Check if the user is a premium user and respond accordingly
     if is_premium_user(user_id):  # Ensure the function 'is_premium_user' is defined
         bot.reply_to(message, "Вы уже имеете премиум, поздравляем!", reply_markup=markup)
     else:
-        bot.reply_to(message, "Премиум даёт полезные функции:\n ✅ Транскрипция аудио и роликов youtube (Premium)\n ✅ Включить GPT-4o (Premium)\n ✅ Больше минут разговора в (Premium)\n", reply_markup=markup_buy)
+        for msg in messages:
+            bot.reply_to(message, msg, reply_markup=markup_buy if msg == messages[0] else None)
 
 
 @bot.message_handler(func=lambda message: message.text == '⛳Включить GPT-4o')
