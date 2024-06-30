@@ -1044,8 +1044,7 @@ def handle_payment_option(call):
         # Create inline keyboard with Pay and Check Payment options
         markup = types.InlineKeyboardMarkup()
         pay_button = types.InlineKeyboardButton(text="Оплатить", url=payment_url)
-        check_button = types.InlineKeyboardButton(text="Проверить", callback_data=f'check_{order_id}')
-        markup.add(pay_button, check_button)
+        markup.add(pay_button)
 
         bot.send_message(chat_id, "Пожалуйста, завершите оплату с помощью RoboKassa:", reply_markup=markup)
 
