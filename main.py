@@ -10,7 +10,7 @@ from telebot import types
 import logging
 from g4f.client import Client
 import g4f
-from config import TOKEN, information_about_company, ADMIN_USER_ID, price
+from configTEST import TOKEN, information_about_company, ADMIN_USER_ID, price
 # from paymentTEST import check, create
 import os
 import sqlite3
@@ -268,7 +268,7 @@ def select_language(message):
         # Set user language to Spanish
         markup = types.ReplyKeyboardMarkup(row_width=1)
         markup.add(types.KeyboardButton("🚀 Inicio"),types.KeyboardButton("🅰 Transcripción"),
-                   types.KeyboardButton('👥 Perfil'),types.KeyboardButton("📟Traducción"),
+                   types.KeyboardButton("📟Traducción"),types.KeyboardButton('👥 Perfil'),
                    types.KeyboardButton("❓ ¿Qué es eso?"))
         welcome_message = "¡Hola! Soy Tiabaldo, tu profesor virtual de español\n" \
 "⠀⠀⠀\n" \
@@ -791,7 +791,7 @@ Al cambiar a la versión premium, se te cobrará una tarifa mensual de 499 rublo
         bot.send_message(user_id, """
     ¡Hola, amigo! 🇪🇸
 
-    🧑‍💻 <b>Tu tarifa:</b> gratuita
+    🧑‍💻 <b>Tu tarifa:</b> бесплатный
     ⏳ <b>Tu saldo:</b> quedan  3 min  / 10,000 tokens  GPT-3.5 
     🛠 <b>Tu modo:</b> GPT-3.5
     🔔 <b>Notificaciones:</b> activadas
@@ -848,7 +848,7 @@ def handle_transcribe_button(message):
 def handle_transcribe_button(message):
     markup = types.ReplyKeyboardMarkup(row_width=1)
     markup.add(types.KeyboardButton("🚀 Inicio"), types.KeyboardButton("🅰 Transcripción"),
-               types.KeyboardButton('👥 Perfil'),types.KeyboardButton("📟Traducción"),
+               types.KeyboardButton("📟Traducción"),types.KeyboardButton('👥 Perfil'),
                types.KeyboardButton("❓ ¿Qué es eso?"))
     user_id = message.from_user.id
     if not is_premium_user(user_id):
@@ -861,7 +861,7 @@ def handle_transcribe_button(message):
 def back_menu(message):
     markup = types.ReplyKeyboardMarkup(row_width=1)
     markup.add(types.KeyboardButton("🚀 Inicio"), types.KeyboardButton('📝 Audio a texto'),
-               types.KeyboardButton('👥 Perfil'),types.KeyboardButton("📟Traducción"),
+               types.KeyboardButton("📟Traducción"),types.KeyboardButton('👥 Perfil'),
                types.KeyboardButton("❓ ¿Qué es eso?"))
     bot.reply_to(message, "Hola, soy tu profesor de español. Pregúntame lo que quieras.", reply_markup=markup)
 
